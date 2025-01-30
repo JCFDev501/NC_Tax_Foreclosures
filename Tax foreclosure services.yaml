@@ -1,0 +1,477 @@
+openapi: 3.0.3
+info:
+  title: Tax Foreclosure Management API
+  description: |-
+    This API provides services to manage tax foreclosure records, user registrations, and county code lookups. It allows users to:
+    - Create and manage tax foreclosure records.
+    - Track changes and history of foreclosures (such as status updates, bid changes, and data modifications).
+    - Retrieve county codes by name and manage county code information.
+    
+    The API also supports user registration and authentication, offering secure access to foreclosure records and operations.
+    Currently we only supoort North Carolina.
+
+    Some key functionalities include:
+    - User creation and management.
+    - Foreclosure record creation and updates with change tracking.
+    - Tax foreclosure history retrieval.
+    - Filtering foreclosures by various parameters (e.g., county, date, case number).
+
+    This API is built using Flask and SQLAlchemy, with secure endpoints for data management. Further updates and future expansions of the API will provide additional insights and features to enhance data handling.
+
+  termsOfService: http://example.com/terms/
+  contact:
+    email: support@taxforeclosureapi.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: Find out more about the Tax Foreclosure Management API
+  url: http://example.com/docs
+servers:
+  - url: https://taxforeclosure-api-3997b8060e22.herokuapp.com/
+    description: Remote test Server
+
+tags:
+  - name: TaxForeclosure
+    description: Everything related to tax foreclosures
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+  - name: TaxForeclosureHistory
+    description: Everything related to tax foreclosures History
+    externalDocs:
+      description: Find out more
+      url: http://swagger.io
+  - name: user
+    description: Operations about user
+paths:
+  /api/tax_foreclosure/list:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: Get all existing tax foreclosures
+      description: Retrieve a list of all tax foreclosure records available in the system.
+      operationId: listTaxForeclosures
+      
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxForeclosure'  # Correct schema reference
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Bad request. Invalid input supplied.
+        '404':
+          description: No tax foreclosures found.
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_by_case_number/{case_number}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures based on case number
+      description: Retrieve tax foreclosure records filtered by the specified case number. A case number contains the case number -> 19CVD000123 followed by a dash the the county code -> 200. so the final product should be this 19CVD000123-200
+      operationId: listByCaseNumber
+      parameters:
+        - name: case_number
+          in: path  # Changed from 'query' to 'path' since case_number is part of the URL
+          description: The case number used to filter foreclosure records. ex. 19CVD000123-200 !! All Caps !!
+          required: true
+          schema:
+            type: string
+            example: 19CVD000123-200
+      responses:
+        '200':
+          description: Successful operation, tax foreclosure record found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid case number supplied
+        '404':
+          description: No tax foreclosure found for the specified case number
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_by_county_and_date/{county}/{foreclosure_data}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures by county and foreclosure date
+      description: Retrieve tax foreclosure records filtered by the specified county and foreclosure date.
+      operationId: listTaxForeclosuresByCountyAndDate
+      parameters:
+        - name: county
+          in: path
+          description: The county and date are used to filter foreclosure records.
+          required: true
+          schema:
+            type: string
+            example: "Forsyth County"
+        - name: foreclosure_data
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2024-09-06"
+      responses:
+        '200':
+          description: Successful operation, list of tax foreclosure records found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid county or foreclosure date supplied
+        '404':
+          description: No tax foreclosures found for the specified county and date
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_by_tag/{tag}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures by tag
+      description: Retrieve tax foreclosure records filtered by the specified tag.
+      operationId: listTaxForeclosuresByTag
+      parameters:
+        - name: tag
+          in: path
+          description: Tag to filter foreclosure records (e.g., `NEW_TAX_FORECLOSURE`, `STATUS_UPDATED`)
+          required: true
+          schema:
+            type: string
+            example: "NEW_TAX_FORECLOSURE"
+      responses:
+        '200':
+          description: Successful operation, tax foreclosures found by tag
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid tag value
+        '404':
+          description: No tax foreclosures found for the specified tag
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_by_parcel_or_reid/{parcel_or_reid}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: Find tax foreclosure by parcel or REID number
+      description: Returns a single tax foreclosure record filtered by the provided parcel identification number or REID number.
+      operationId: getTaxForeclosureByParcelOrReid
+      parameters:
+        - name: parcel_or_reid
+          in: path
+          description: Parcel identification number or REID number used to return a tax foreclosure record
+          required: true
+          schema:
+            type: string
+            example: "6836834698.000"  # Example of a parcel or REID number
+      responses:
+        '200':
+          description: Successful operation, tax foreclosure found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaxForeclosure'          
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid parcel or REID number supplied
+        '404':
+          description: Tax foreclosure not found
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_after_date/{foreclosure_date}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures after a specific date
+      description: Returns a list of tax foreclosure records where the foreclosure date is after the specified date.
+      operationId: listTaxForeclosuresAfterDate
+      parameters:
+        - name: foreclosure_date
+          in: path
+          description: The foreclosure date used to filter records (ex. YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2024-07-31"
+      responses:
+        '200':
+          description: Successful operation, list of tax foreclosures found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid date supplied (should be in YYYY-MM-DD format)
+        '404':
+          description: No tax foreclosures found after the specified date
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_before_date/{foreclosure_date}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures before a specific date
+      description: Returns a list of tax foreclosure records where the foreclosure date is before the specified date.
+      operationId: listTaxForeclosuresBeforeDate
+      parameters:
+        - name: foreclosure_date
+          in: path
+          description: The foreclosure date used to filter records (ex. YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2024-06-01"
+      responses:
+        '200':
+          description: Successful operation, list of tax foreclosures found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid date supplied (should be in YYYY-MM-DD format)
+        '404':
+          description: No tax foreclosures found before the specified date
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_by_date/{foreclosure_date}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures by a specific date
+      description: Returns a list of tax foreclosure records that match the specified foreclosure date.
+      operationId: listTaxForeclosuresByDate
+      parameters:
+        - name: foreclosure_date
+          in: path
+          description: The foreclosure date used to filter records (ex. YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2024-09-06"
+      responses:
+        '200':
+          description: Successful operation, list of tax foreclosures found for the specified date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid date supplied (should be in YYYY-MM-DD format)
+        '404':
+          description: No tax foreclosures found for the specified date
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/list_by_county/{county}:
+    get:
+      tags:
+        - TaxForeclosure
+      summary: List tax foreclosures by county
+      description: Returns a list of tax foreclosure records for the specified county.
+      operationId: listTaxForeclosuresByCounty
+      parameters:
+        - name: county
+          in: path
+          description: The county used to filter tax foreclosure records
+          required: true
+          schema:
+            type: string
+            example: "Guilford County"
+      responses:
+        '200':
+          description: Successful operation, list of tax foreclosures found for the specified county
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosure'
+        '400':
+          description: Invalid county name supplied
+        '404':
+          description: No tax foreclosures found for the specified county
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/history:
+    get:
+      tags:
+        - TaxForeclosureHistory
+      summary: Get the history of all tax foreclosures
+      description: Returns the complete history of updates made to all tax foreclosure records.
+      operationId: getAllTaxForeclosureHistory
+      responses:
+        '200':
+          description: Successful operation, history of all tax foreclosure records found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosureHistory'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosureHistory'
+        '404':
+          description: No tax foreclosure history found
+        '403':
+          description: Not Authorized.
+  /api/tax_foreclosure/history/{case_number}:
+    get:
+      tags:
+        - TaxForeclosureHistory
+      summary: Get tax foreclosure history by case number
+      description: Returns the history of updates made to a tax foreclosure record for the specified case number.
+      operationId: getTaxForeclosureHistoryByCaseNumber
+      parameters:
+        - name: case_number
+          in: path
+          description: The case number used to retrieve the foreclosure history
+          required: true
+          schema:
+            type: string
+            example: "18CVD005378-400"
+      responses:
+        '200':
+          description: Successful operation, history of the tax foreclosure record found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosureHistory'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaxForeclosureHistory'
+        '400':
+          description: Invalid case number supplied
+        '404':
+          description: No tax foreclosure history found for the specified case number
+        '403':
+          description: Not Authorized.
+components:
+  schemas:
+    TaxForeclosure:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the tax foreclosure record
+        case_number:
+          type: string
+          description: The case number associated with the foreclosure
+        county:
+          type: string
+          description: County where the foreclosure is taking place
+        status:
+          type: string
+          description: The current status of the foreclosure
+        highest_bid:
+          type: number
+          description: The highest bid placed on the foreclosure
+        foreclosure_date:
+          type: string
+          format: date
+          description: The date of the foreclosure
+        data:
+          type: string
+          description: Additional data related to the foreclosure
+        date_last_updated:
+          type: string
+          format: date
+          description: The last date the record was updated
+    TaxForeclosureHistory:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the tax foreclosure record
+        case_number:
+          type: string
+          description: The case number associated with the foreclosure
+        old_highest_bid:
+          type: number
+          description: Old highest bid placed on property
+        new_highest_bid:
+          type: number
+          description: New highest bid placed on property
+        old_status:
+          type: string
+          description: Old status on property
+        new_status:
+          type: string
+          description: New status on property
+        old_data:
+          type: string
+          description: Old additional data related to the foreclosure
+        new_data:
+          type: string
+          description: New additional data related to the foreclosure
+        date_last_updated:
+          type: string
+          format: date
+          description: The last date the record was updated
+    
