@@ -4,9 +4,9 @@ This is a tax foreclosure website that I developed for a client, the client want
 ** I AM NOT ALLOWED TO SHARE THE WHOLE PROJECT, BUT I CAN SHARE SOME FILES...
 
 This project was made with the following languages and frameworks:
--- React --> We decided to use reate for the frontend.
+-- React --> We decided to use React for the frontend.
 -- Python flask --> we use flask for the backend this way we can use things like flask user mixin
--- TailwindCSS --> we are using tailwing for the design of the website
+-- TailwindCSS --> we are using tailwind for the design of the website
 -- Google cloud platform --> we decided to deploy and manage the app using GCP 
 -- Scrapy --> We use scrapy to web crawl the internet for our relavent data
 -- Postgresql --> this is that data base we decided to go with to store all relevant data like users and taxforeclosure props
