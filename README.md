@@ -10,6 +10,7 @@ This project was made with the following languages and frameworks:
 -- Google cloud platform --> we decided to deploy and manage the app using GCP 
 -- Scrapy --> We use scrapy to web crawl the internet for our relavent data
 -- Postgresql --> this is that data base we decided to go with to store all relevant data like users and taxforeclosure props
+-- ARKGIS --> we used this to display our properties on the map
 
 As the full stack dev it was my responsibilty to design and implement all the features mentioned above. Here are some screen shots..
 
